@@ -6,6 +6,18 @@ import {RupeeCoin} from "./RupeeCoin.sol";
 import {IPriceFeedsAggregator} from "./interface/IPriceFeedsAggregator.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+
+/**@author Shikhar Agarwal
+ * @title Rupee Coin Engine
+ * 
+ * This is the engine for Rupee Coin
+ * The rupee coin is a relative coin which is pegged with INR
+ * It is powered by algorithmic approach
+ * Allows user to deposit two collaterals - WETH, WBTC
+ * Collateral Type - Exogeneous
+ * 
+ * @notice The invariant is that the total Collateral Deposited should always be greater than total Rupee Coin Minted
+*/
 contract RupeeCoinEngine {
     // Errors
     error RupeeCoinEngine__amountShouldBeMoreThanZero();
@@ -77,12 +89,20 @@ contract RupeeCoinEngine {
     }
 
 
-    // External Functions
+    /**@param token Token for which collateral to be deposited
+     * @param collateralAmount The amount of collateral to deposit
+     * @param rupeeCoinAmount The amount of rupee coin to mint
+     * @notice Allows user to deposit collateral and mint Rupee Coin in a single txn
+    */
     function depositCollateralAndMintCoin(address token, uint256 collateralAmount, uint256 rupeeCoinAmount) external {
         depositCollateral(token, collateralAmount);
         mintCoin(rupeeCoinAmount);
     }
 
+    /**@param token Token for which collateral to be deposited
+     * @param amount The amount of collateral to deposit
+     * @notice Allows user to deposit collateral for their choosed token
+    */
     function depositCollateral(address token, uint256 amount) public onlyAllowedToken(token) amountMoreThanZero(amount) {
         s_collateralDeposited[msg.sender][token] += amount;
 
@@ -94,6 +114,9 @@ contract RupeeCoinEngine {
         }
     }
 
+    /**@param amount The amount of rupee coin to mint
+     * @notice Allows user to mint Rupee Coin
+    */
     function mintCoin(uint256 amount) public amountMoreThanZero(amount) {
         s_coinMinted[msg.sender] += amount;
 
@@ -107,6 +130,10 @@ contract RupeeCoinEngine {
         }
     }
 
+    /**@param token Token for which user want to withdraw their collateral deposited
+     * @param amount The collateral amount to withdraw
+     * @notice Allows user to withdraw their collateral deposited for their choosed token
+    */
     function redeemCollateral(address token, uint256 amount) public onlyAllowedToken(token) amountMoreThanZero(amount) {
         _redeemCollateral(token, msg.sender, msg.sender, amount);
         
@@ -115,15 +142,29 @@ contract RupeeCoinEngine {
         }
     }
 
+    /**@param token Token for which user want to withdraw their collateral deposited
+     * @param collateralReedemAmount The collateral amount to withdraw
+     * @param burnAmount The amount of Rupee Coin to burn
+     * @notice Allows user to burn Rupee Coin and withdraw the collateral deposited in a single txn
+    */
     function burnCoinAndRedeemCollateral(address token, uint256 collateralReedemAmount, uint256 burnAmount) external {
         burnCoin(burnAmount);
         redeemCollateral(token, collateralReedemAmount);
     }
 
+    /**@param amount The amount of Rupee Coin to burn
+     * @notice Allows user to burn Rupee Coin
+    */
     function burnCoin(uint256 amount) public amountMoreThanZero(amount) {
         _burnCoin(msg.sender, msg.sender, amount);
     }
     
+    /**@param user The user to liquidate if the health factor is broken
+     * @param token The token selected by liquidator to the get their reward
+     * @param debtToCover The amount of Rupee Coin Debt to cover for the user
+     * @notice Allows people to liquidate the user whose health is below minimum health factor
+     * @notice It will not allow a person to liquidate others whose health factor is broken
+    */
     function liquidate(address user, address token, uint256 debtToCover) external {
         revertIfHealthFactorIsBroken(msg.sender);
 
@@ -146,9 +187,6 @@ contract RupeeCoinEngine {
             revert RupeeCoinEngine__userHealthFactorNotImproved();
         }
     }
-
-
-    // PRIVATE 
 
     function _redeemCollateral(address token, address from, address to, uint256 amount) private {
         if (amount > s_collateralDeposited[from][token]) {
@@ -182,8 +220,6 @@ contract RupeeCoinEngine {
         i_coin.burn(amount);
     }
 
-
-    // INTERNAL & PRIVATE VIEW / PURE
     function revertIfHealthFactorIsBroken(address user) internal view {
         uint256 userHealthFactor = _healthFactor(user);
 
@@ -204,8 +240,6 @@ contract RupeeCoinEngine {
         return (thresholdCollateral * PRECISION) / totalRupeeCoinMinted;
     }
 
-
-    // EXTERNAL AND PUBLIC VIEW / PURE
     function getUserAccountInfo(address user) public view returns (uint256 totalCollateralDeposited, uint256 totalRupeeCoinMinted) {
         totalCollateralDeposited = getTotalCollateralDepositedBy(user);
         totalRupeeCoinMinted = s_coinMinted[user];
