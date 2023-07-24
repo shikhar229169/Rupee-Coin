@@ -8,6 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 
 /**@author Shikhar Agarwal
+ * @author Naman Gautam
  * @title Rupee Coin Engine
  * 
  * This is the engine for Rupee Coin
@@ -87,7 +88,6 @@ contract RupeeCoinEngine {
 
         i_coin = RupeeCoin(rupeeCoinAddress);
     }
-
 
     /**@param token Token for which collateral to be deposited
      * @param collateralAmount The amount of collateral to deposit
