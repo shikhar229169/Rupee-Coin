@@ -35,8 +35,8 @@ contract HelperConfig is Script{
         return NetworkConfig({
             weth: 0xdd13E55209Fd76AfE204dBda4007C227904f0a81,
             wbtc: 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063,
-            ethPriceFeed: address(0),
-            btcPriceFeed: address(0),
+            ethPriceFeed: 0x38c6D12DC5aee7A804e5Ce4CFef47a0a684C829d,
+            btcPriceFeed: 0xf5600144B2A0c9b02812A6daE790dA1129c4b7df,
             deployerKey: vm.envUint("PRIVATE_KEY")
         });
     }
