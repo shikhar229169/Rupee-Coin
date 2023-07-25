@@ -55,6 +55,7 @@ contract RupeeCoinEngine {
     event CollateralRedeemed(address indexed token, address indexed from, address indexed to, uint256 amount);
     event RupeeCoinMinted(address indexed user, uint256 indexed amount);
     event RupeeCoinBurnt(address indexed onBehalfOf, address indexed from, uint256 indexed amount);
+    event Liquidated(address indexed user, address indexed liquidator, uint256 indexed improvedHealthFactor);
 
     // Modifiers
     modifier onlyAllowedToken(address token) {
@@ -186,6 +187,8 @@ contract RupeeCoinEngine {
         if (endingUserHealthFactor <= userStartingHealthFactor) {
             revert RupeeCoinEngine__userHealthFactorNotImproved();
         }
+
+        emit Liquidated(user, msg.sender, endingUserHealthFactor);
     }
 
     function _redeemCollateral(address token, address from, address to, uint256 amount) private {
