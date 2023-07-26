@@ -15,3 +15,8 @@ Rupee Coin Engine - https://sepolia.etherscan.io/address/0xCE1A2cc91c7Fc49017bE0
 EthToInrPriceFeed - https://sepolia.etherscan.io/address/0x38c6D12DC5aee7A804e5Ce4CFef47a0a684C829d#code
 
 BtcToInrPriceFeed - https://sepolia.etherscan.io/address/0xf5600144B2A0c9b02812A6daE790dA1129c4b7df#code
+
+## To deposit collateral as eth to get Rupee Coin:
+- User needs to deposit eth in the wETH contract - https://sepolia.etherscan.io/address/0xdd13E55209Fd76AfE204dBda4007C227904f0a81#writeContract
+- Then user needs to approve the Rupee Coin Engine Contract with the required amount of eth to be deposited in Rupee Coin Engine.
+- After that user can call the depositCollateral function on the Rupee Coin Engine and can mint Rupee Coin within the threshold amount so that health factor is always greater than required for the protocol.
