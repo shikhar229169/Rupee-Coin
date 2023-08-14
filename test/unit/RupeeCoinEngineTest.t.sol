@@ -385,7 +385,7 @@ contract RupeeCoinEngineTest is Test {
         // Now let's decrease the price of eth, as a result of which user health factor will get decresed
         // and it will be below min health factor
 
-        uint256 newPrice = 140000e8;
+        uint256 newPrice = 120000e8;
         MockPriceFeedsAggregator(ethPriceFeed).updateRoundData(newPrice, block.timestamp);
         uint256 mintAmount = 750000e18;
         uint256 debtToCover = mintAmount;
@@ -397,6 +397,15 @@ contract RupeeCoinEngineTest is Test {
         rupeeCoinEngine.depositCollateral(weth, collateralAmount);
         rupeeCoinEngine.mintCoin(mintAmount);
 
+        vm.stopPrank();
+
+        uint256 initLiquidatorEthBalance = IERC20(weth).balanceOf(liquidator);
+        uint256 initUserEthDeposited = rupeeCoinEngine.getUserCollateralDeposited(user, weth);
+        uint256 initLiquidatorRupee = rupeeCoin.balanceOf(liquidator);
+        uint256 initUserRupeeLoan = rupeeCoinEngine.getRupeeCoinMinted(user);
+
+        vm.startPrank(liquidator);
+
         rupeeCoin.approve(address(rupeeCoinEngine), debtToCover);
 
         vm.expectEmit(true, true, true, false, address(rupeeCoinEngine));
@@ -405,5 +414,18 @@ contract RupeeCoinEngineTest is Test {
         rupeeCoinEngine.liquidate(user, weth, debtToCover);
 
         vm.stopPrank();
+
+        uint256 finalLiquidatorEthBalance = IERC20(weth).balanceOf(liquidator);
+        uint256 finalUserEthDeposited = rupeeCoinEngine.getUserCollateralDeposited(user, weth);
+        uint256 finalLiquidatorRupee = rupeeCoin.balanceOf(liquidator);
+        uint256 finalUserRupeeLoan = rupeeCoinEngine.getRupeeCoinMinted(user);
+
+        // 120000 INR -> 1 eth, 750000 INR -> (750000/120000) = 6.25 eth + (5% bonus on 6.25) = (6.25 + 0.3125) = 6.5625
+        uint256 rewardEthToLiquidator = 6.5625 ether;
+
+        assertEq(finalLiquidatorEthBalance, initLiquidatorEthBalance + rewardEthToLiquidator);
+        assertEq(finalUserEthDeposited, initUserEthDeposited - rewardEthToLiquidator);
+        assertEq(finalLiquidatorRupee, initLiquidatorRupee - debtToCover);
+        assertEq(finalUserRupeeLoan, initUserRupeeLoan - debtToCover);
     }
 }
